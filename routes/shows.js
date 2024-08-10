@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { User, Show } = require("../models/index.js");
+const { check, validationResult } = require("express-validator");
 
 // - `GET` /shows
 router.get("/", async (req, res) => {
@@ -28,6 +29,7 @@ router.get("/:showIs/users", async (req, res) => {
   res.json(users);
 });
 // - `PATCH` /shows/:showId
+
 // - `DELETE` /shows/:showId
 router.delete("/:showId", async (req, res) => {
   const show = await Show.findByPk(req.params.showId);
@@ -39,5 +41,25 @@ router.delete("/:showId", async (req, res) => {
   res.status(204);
 });
 // - `GET` shows of a particular genre (genre in `req.query`)
+
+//CREATE SHOW CHECK TITLE NO LONGER THAN 25
+router.post(
+  "/",
+  [check("title").isLength({ min: 0, max: 25 }).trim()],
+  async (req, res) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      res.status(400).json({ error: errors.array() });
+    } else {
+      const show = await Show.create({
+        title: req.body.title,
+        genre: req.body.genre,
+        available: req.body.available,
+        rating: req.body.rating,
+      });
+      res.status(201).json(show);
+    }
+  }
+);
 
 module.exports = router;
